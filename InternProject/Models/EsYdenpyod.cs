@@ -5,7 +5,7 @@ namespace InternProject.Models;
 
 public partial class EsYdenpyod
 {
-    public decimal? Gyono { get; set; }
+    public decimal Gyono { get; set; }
 
     public decimal Denpyono { get; set; }
 

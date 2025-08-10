@@ -21,20 +21,19 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<EsYdenpyod> EsYdenpyods { get; set; }
 
-    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    //    => optionsBuilder.UseOracle("Name=ConnectionStrings:DefaultConnection");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseOracle("Name=ConnectionStrings:DefaultConnection");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .HasDefaultSchema("BAI1")
             .UseCollation("USING_NLS_COMP");
 
         modelBuilder.Entity<Bumon>(entity =>
         {
-            entity.HasKey(e => e.Bumoncd).HasName("SYS_C008220");
+            entity.HasKey(e => e.Bumoncd).HasName("SYS_C008227");
 
-            entity.ToTable("BUMON");
+            entity.ToTable("BUMON", "INTERPJ");
 
             entity.Property(e => e.Bumoncd)
                 .HasMaxLength(20)
@@ -48,9 +47,9 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<EsYdenpyo>(entity =>
         {
-            entity.HasKey(e => e.Denpyono).HasName("SYS_C008222");
+            entity.HasKey(e => e.Denpyono).HasName("SYS_C008229");
 
-            entity.ToTable("ES_YDENPYO");
+            entity.ToTable("ES_YDENPYO", "INTERPJ");
 
             entity.Property(e => e.Denpyono)
                 .HasColumnType("NUMBER")
@@ -126,9 +125,9 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<EsYdenpyod>(entity =>
         {
-            entity.HasKey(e => new { e.Denpyono, e.Gyono }).HasName("PK_ES_YDENPYOD");
-            entity.ToTable("ES_YDENPYOD");
+            entity.HasKey(e => new { e.Denpyono, e.Gyono });
 
+            entity.ToTable("ES_YDENPYOD", "INTERPJ");
 
             entity.Property(e => e.Denpyono)
                 .HasColumnType("NUMBER")
@@ -189,8 +188,8 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("UPDATE_PGM_PRM");
 
             entity.HasOne(d => d.DenpyonoNavigation).WithMany(p => p.EsYdenpyods)
-                    .HasForeignKey(d => d.Denpyono)
-                     .HasConstraintName("FK_ES_YDENPYOD");
+                .HasForeignKey(d => d.Denpyono)
+                .HasConstraintName("FK_ES_YDENPYOD");
         });
 
         OnModelCreatingPartial(modelBuilder);
