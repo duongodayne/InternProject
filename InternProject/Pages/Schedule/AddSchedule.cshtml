@@ -1,0 +1,383 @@
+﻿@page
+@model InternProject.Pages.Schedule.AddScheduleModel
+@{
+    ViewData["Title"] = "予定伝票入力";
+}
+
+<div class="container-fluid">
+    <form method="post">
+        <input type="hidden" asp-for="IsNew" />
+        <input type="hidden" asp-for="Denpyono" />
+        <input type="hidden" asp-for="Denpyodt" />
+
+        <div class="form-container">
+            <h3 class="form-title">予定伝票入力</h3>
+
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div class="alert alert-warning">@Model.Message</div>
+            }
+
+            <div class="form-content">
+                <!-- Row 1: 伝票番号 -->
+                <div class="form-row">
+                    <label class="form-label">伝票番号</label>
+                    <div class="form-input">
+                        <input value="@(Model.IsNew ? "" : Model.Denpyono?.ToString())"
+                               class="form-control"
+                               placeholder="@(Model.IsNew ? "自動採番" : "")"
+                               readonly
+                               style="background-color: #e9ecef;" />
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="button-container">
+                        <button type="submit" asp-page-handler="Register" class="btn btn-primary">登録</button>
+                        @if (!Model.IsNew)
+                        {
+                            <button type="button" class="btn btn-danger" onclick="confirmDelete()">削除</button>
+                        }
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='/Index'">終了</button>
+                    </div>
+                </div>
+
+                <!-- Hidden form for delete confirmation -->
+                <input type="hidden" asp-for="ConfirmDelete" id="confirmDeleteInput" />
+            </div>
+
+            <!-- Row 2: 伝票日付, 出納方法, 支払予定日 -->
+            <div class="form-row row-compact">
+                <label class="form-label">伝票日付</label>
+                <div class="form-input narrow">
+                    <input type="text" class="form-control input-compact"
+                           value="@Model.DenpyodtDisplay"
+                           readonly />
+                </div>
+
+                <label class="form-label">出納方法</label>
+                <div class="form-input narrow">
+                    <select asp-for="Suitokb" class="form-control input-compact" required>
+                        <option value="">選択</option>
+                        <option value="現金">現金</option>
+                        <option value="振込">振込</option>
+                        <option value="カード">カード</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+
+                <label class="form-label">支払予定日</label>
+                <div class="form-input narrow">
+                    <input asp-for="ShiharaiYoteibi" type="text"
+                           class="form-control date-input input-compact"
+                           placeholder="yyyy/MM/dd" />
+                </div>
+            </div>
+
+            <!-- Row 3: 年度 -->
+            <div class="form-row">
+                <label class="form-label">年度</label>
+                <div class="form-input">
+                    <select asp-for="Nendo" asp-items="Model.NendoItems" class="form-control" required>
+                        <option value="">選択</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 4: 申請日 -->
+            <div class="form-row">
+                <label class="form-label">申請日</label>
+                <div class="form-input">
+                    <input asp-for="Shinseibi" type="text" class="form-control date-input"
+                           placeholder="yyyy/MM/dd" required />
+                </div>
+            </div>
+
+            <!-- Row 5: 起票部門 (2 ô: code và name) -->
+            <div class="form-row">
+                <label class="form-label">起票部門</label>
+                <div class="form-input" style="display: flex; gap: 10px;">
+                    <input asp-for="BumoncdYkanr"
+                           id="bumonCode"
+                           class="form-control"
+                           style="width: 100px;"
+                           placeholder="コード"
+                           required />
+                    <input type="text"
+                           id="bumonName"
+                           value="@Model.BumonName"
+                           class="form-control"
+                           style="width: 200px; background-color: #e9ecef;"
+                           placeholder="部門名"
+                           readonly />
+                </div>
+            </div>
+
+            <!-- Row 6: 出張目的（備考） -->
+            <div class="form-row">
+                <label class="form-label">出張目的<br />（備考）</label>
+                <div class="form-input full-width">
+                    <textarea asp-for="Biko" class="form-control" rows="3" required></textarea>
+                </div>
+            </div>
+
+            @*   <!-- Row 7: 金額 -->
+                <div class="form-row">
+                    <label class="form-label">金額</label>
+                    <div class="form-input">
+                        <input asp-for="Kingaku" type="number" class="form-control" step="1" />
+                    </div>
+                </div> *@
+        </div>
+
+
+    </form>
+</div>
+
+<style>
+    /* ====== Base spacing & tokens ====== */
+    :root {
+        --gap-x: 16px;
+        --gap-y: 12px;
+        --label-w: 100px;
+        --label-w-compact: 90px;
+        --input-w-default: 350px;
+        --input-w-compact: 130px;
+        --radius: 4px;
+        --border: #ccc;
+        --muted: #e9ecef;
+        --text: #212529;
+        --bg: #f9f9f9;
+        --primary: #007bff;
+        --primary-hover: #0056b3;
+        --secondary: #6c757d;
+        --secondary-hover: #545b62;
+        --danger: #dc3545;
+        --danger-hover: #c82333;
+    }
+
+    /* ====== Layout containers ====== */
+    .container-fluid {
+        padding: 20px;
+        color: var(--text);
+    }
+
+    .form-container {
+        border: 2px solid #333;
+        padding: 20px;
+        background-color: var(--bg);
+        margin-bottom: 20px;
+    }
+
+    .form-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: 700;
+        font-size: 20px;
+    }
+
+    .form-content {
+    }
+
+    /* ====== Rows, labels, inputs ====== */
+    .form-row {
+        display: flex;
+        align-items: center;
+        column-gap: var(--gap-x);
+        row-gap: var(--gap-y);
+        margin-bottom: 15px;
+        flex-wrap: nowrap;
+    }
+
+    .form-label {
+        width: var(--label-w);
+        text-align: right;
+        font-weight: 700;
+        padding-right: 10px;
+        font-size: 14px;
+    }
+
+    .form-input {
+        flex: 0 0 var(--input-w-default);
+        max-width: var(--input-w-default);
+    }
+
+        .form-input.full-width {
+            flex: 1 1 auto;
+            max-width: 500px; /* Giữ theo file cũ. Có thể tăng lên nếu cần */
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 14px;
+        background-color: #fff;
+        color: var(--text);
+        line-height: 1.4;
+    }
+
+        .form-control:focus {
+            outline: 2px solid rgba(0, 123, 255, 0.2);
+            border-color: var(--primary);
+        }
+
+        .form-control[readonly] {
+            background-color: var(--muted) !important;
+            cursor: not-allowed;
+            color: #495057;
+        }
+
+    /* Date input default width */
+    .date-input {
+        width: 150px;
+    }
+
+    /* ====== Row 2: compact line (伝票日付 / 出納方法 / 支払予定日) ====== */
+    .form-row.row-compact {
+        column-gap: 16px;
+        row-gap: 8px;
+        flex-wrap: nowrap; /* giữ cùng 1 hàng khi đủ rộng */
+    }
+
+        .form-row.row-compact .form-label {
+            width: var(--label-w-compact);
+            padding-right: 6px;
+        }
+
+        .form-row.row-compact .form-input.narrow {
+            flex: 0 0 auto;
+            max-width: none;
+        }
+
+    .input-compact {
+        width: var(--input-w-compact) !important;
+        padding: 4px 6px;
+    }
+
+        .input-compact.date-input {
+            width: var(--input-w-compact) !important;
+        }
+
+    /* ====== Buttons ====== */
+    .button-container {
+        margin-left: auto; /* đẩy group nút sang phải trong cùng .form-row */
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 8px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: var(--radius);
+        font-size: 14px;
+        line-height: 1.2;
+    }
+
+    .btn-primary {
+        background-color: var(--primary);
+        color: #fff;
+    }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+    .btn-secondary {
+        background-color: var(--secondary);
+        color: #fff;
+    }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-hover);
+        }
+
+    .btn-danger {
+        background-color: var(--danger);
+        color: #fff;
+    }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+    /* ====== Alerts ====== */
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: var(--radius);
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+    }
+
+    /* ====== Special widths for 部門 inputs (khớp id trong markup) ====== */
+    #bumonCode {
+        width: 100px;
+    }
+
+    #bumonName {
+        width: 200px;
+        background-color: var(--muted);
+    }
+
+</style>
+
+<script>
+    // Function xác nhận xóa
+    function confirmDelete() {
+        if (confirm('削除してもよろしいですか？')) {
+            document.getElementById('confirmDeleteInput').value = 'true';
+            var form = document.querySelector('form');
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'handler';
+            input.value = 'Delete';
+            form.appendChild(input);
+            form.submit();
+        }
+    }
+
+    // Format date input
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInputs = document.querySelectorAll('.date-input');
+
+        dateInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                let value = this.value.replace(/[^\d]/g, '');
+                if (value.length === 8) {
+                    this.value = value.substring(0,4) + '/' + value.substring(4,6) + '/' + value.substring(6,8);
+                }
+            });
+        });
+
+        // Auto load tên bộ phận khi nhập mã
+        const bumonCodeInput = document.getElementById('bumonCode');
+        const bumonNameInput = document.getElementById('bumonName');
+
+        if (bumonCodeInput) {
+            bumonCodeInput.addEventListener('blur', function() {
+                const code = this.value;
+                if (code) {
+                    // Gọi AJAX để lấy tên bộ phận
+                    fetch(`/Schedule/AddSchedule?handler=BumonName&bumoncd=${code}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            bumonNameInput.value = data.name || '';
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            bumonNameInput.value = '';
+                        });
+                } else {
+                    bumonNameInput.value = '';
+                }
+            });
+        }
+    });
+</script>

@@ -1,18 +1,19 @@
-﻿
-@page
-@model InternProject.Pages.YDenpyo.IndexModel
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "予定伝票一覧";
+}
 
 <div class="container-fluid">
 
-  <form method="get" class="search-form">
-    <div class="search-container">
-      <h3 class="search-title">予定伝票一覧</h3>
+    <form method="get" class="search-form">
+        <div class="search-container">
+            <h3 class="search-title">予定伝票一覧</h3>
 
-      <div class="search-fields">
-        <!-- 年度 -->
-        <div class="field-row">
-          <label class="field-label">年度</label>
-          <div class="field-input">
+            <div class="search-fields">
+                <div class="field-row">
+                    <label class="field-label">年度</label>
+                    <div class="field-input">
                         <select name="Nendo" class="year-select">
                             <option value="">年度</option>
                             @foreach (var y in Model.AvailableYears)
@@ -20,145 +21,347 @@
                                 <option value="@y" selected="@(Model.Nendo == y ? "selected" : null)">@y 年度</option>
                             }
                         </select>
+                    </div>
+                </div>
 
-          </div>
+                <div class="field-row">
+                    <label class="field-label">伝票番号</label>
+                    <div class="field-input range-input">
+                        <input type="text" name="DenpyonoFrom" value="@Model.DenpyonoFrom" class="range-from" />
+                        <span class="range-separator">～</span>
+                        <input type="text" name="DenpyonoTo" value="@Model.DenpyonoTo" class="range-to" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">伝票日付</label>
+                    <div class="field-input range-input">
+                        <input type="date" name="DenpyodtFrom" value="@Model.DenpyodtFrom" class="range-from date-input" />
+                        <span class="range-separator">～</span>
+                        <input type="date" name="DenpyodtTo" value="@Model.DenpyodtTo" class="range-to date-input" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">申請日</label>
+                    <div class="field-input range-input">
+                        <input type="date" name="ShinseibFrom" value="@Model.ShinseibFrom" class="range-from date-input" />
+                        <span class="range-separator">～</span>
+                        <input type="date" name="ShinseibTo" value="@Model.ShinseibTo" class="range-to date-input" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">出納方法</label>
+                    <div class="field-input checkbox-group">
+                        <label><input type="checkbox" name="ShutsunoHoho" value="現金" @(Model.ShutsunoHoho.Contains("現金") ? "checked" : "") /> 現金</label>
+                        <label><input type="checkbox" name="ShutsunoHoho" value="振込" @(Model.ShutsunoHoho.Contains("振込") ? "checked" : "") /> 振込</label>
+                        <label><input type="checkbox" name="ShutsunoHoho" value="カード" @(Model.ShutsunoHoho.Contains("カード") ? "checked" : "") /> カード</label>
+                        <label><input type="checkbox" name="ShutsunoHoho" value="その他" @(Model.ShutsunoHoho.Contains("その他") ? "checked" : "") /> その他</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-button-container">
+                <button type="submit" class="btn btn-primary">検索</button>
+                <button type="button" class="btn btn-secondary" onclick="createNew()">登録</button>
+            </div>
         </div>
+    </form>
 
-        <!-- 伝票番号 From-To -->
-        <div class="field-row">
-          <label class="field-label">伝票番号</label>
-          <div class="field-input range-input">
-            <input type="number" name="DenpyonoFrom" value="@(Model.DenpyonoFrom?.ToString())" class="range-from" />
-            <span class="range-separator">～</span>
-            <input type="number" name="DenpyonoTo" value="@(Model.DenpyonoTo?.ToString())" class="range-to" />
-          </div>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-gyou">行</th>
+                    <th class="col-denpyono">伝票番号</th>
+                    <th class="col-bumon">起票部門</th>
+                    <th class="col-denpyodt">伝票日付</th>
+                    <th class="col-shinsei">申請日</th>
+                    <th class="col-shutsuno">出納方法</th>
+                    <th class="col-mokuteki">出張目的</th>
+                    <th class="col-kingaku">金額</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Results != null && Model.Results.Any())
+                {
+                    @for (int i = 0; i < Model.Results.Count; i++)
+                    {
+                        var item = Model.Results[i];
+                        <tr ondblclick="editItem(@item.Denpyono)" style="cursor: pointer;">
+                            <td class="text-center">@(i + 1)</td>
+                            <td>@item.Denpyono</td>
+                            <td>@(item.BumoncdYkanrNavigation?.Bumonnm ?? item.BumoncdYkanr)</td>
+                            <td>@item.Denpyodt</td>
+                            <td>@item.Uketukedt</td>
+                            <td>@item.Suitokb</td>
+                            <td>@item.Biko</td>
+                            <td class="text-right">@(item.Kingaku?.ToString("N0") ?? "0")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="8" class="text-center">データがありません</td></tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            <div class="total-info">
+                交通費計: @((Model.Results?.Sum(x => x.Kingaku ?? 0) ?? 0).ToString("N0"))
+            </div>
         </div>
-
-        <!-- 伝票日付 From-To -->
-        <div class="field-row">
-          <label class="field-label">伝票日付</label>
-          <div class="field-input range-input">
-            <input type="date" name="DenpyodtFrom" value="@(Model.DenpyodtFrom?.ToString("yyyy-MM-dd"))" class="range-from date-input" />
-            <span class="range-separator">～</span>
-            <input type="date" name="DenpyodtTo" value="@(Model.DenpyodtTo?.ToString("yyyy-MM-dd"))" class="range-to date-input" />
-          </div>
-        </div>
-
-        <!-- 申請日 From-To -->
-        <div class="field-row">
-          <label class="field-label">申請日</label>
-          <div class="field-input range-input">
-            <input type="date" name="ShinseibFrom" value="@(Model.ShinseibFrom?.ToString("yyyy-MM-dd"))" class="range-from date-input" />
-            <span class="range-separator">～</span>
-            <input type="date" name="ShinseibTo" value="@(Model.ShinseibTo?.ToString("yyyy-MM-dd"))" class="range-to date-input" />
-          </div>
-        </div>
-
-        <!-- 出納方法 -->
-        <div class="field-row">
-          <label class="field-label">出納方法</label>
-          <div class="field-input checkbox-group">
-            <label><input type="checkbox" name="ShutsunoHoho" value="現金"  @(Model.ShutsunoHoho.Contains("現金")  ? "checked" : "") /> 現金</label>
-            <label><input type="checkbox" name="ShutsunoHoho" value="振込"  @(Model.ShutsunoHoho.Contains("振込")  ? "checked" : "") /> 振込</label>
-            <label><input type="checkbox" name="ShutsunoHoho" value="カード" @(Model.ShutsunoHoho.Contains("カード") ? "checked" : "") /> カード</label>
-            <label><input type="checkbox" name="ShutsunoHoho" value="その他" @(Model.ShutsunoHoho.Contains("その他") ? "checked" : "") /> その他</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="search-button-container">
-        <button type="submit" class="btn btn-primary">検索</button>
-        <a asp-page="Duong/HahaHoho" class="btn btn-secondary">登録</a>
-      </div>
     </div>
-  </form>
-
-  <div class="table-container">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th class="col-gyou">行</th>
-          <th class="col-denpyono">伝票番号</th>
-          <th class="col-bumon">起票部門</th>
-          <th class="col-denpyodt">伝票日付</th>
-          <th class="col-shinsei">申請日</th>
-          <th class="col-shutsuno">出納方法</th>
-          <th class="col-mokuteki">出張目的</th>
-          <th class="col-kingaku">金額</th>
-        </tr>
-      </thead>
-      <tbody>
-      @if (Model.Results.Any())
-      {
-          for (int i = 0; i < Model.Results.Count; i++)
-          {
-              var item = Model.Results[i];
-              <tr class="row-link" data-id="@item.Denpyono">
-                <td class="text-center">@(i + 1)</td>
-                <td>@item.Denpyono</td>
-                <td>@(item.BumoncdYkanrNavigation?.Bumonnm ?? item.BumoncdYkanr)</td>
-                <td>@(DateTime.TryParse(item.Denpyodt, out var d1) ? d1.ToString("yyyy/MM/dd") : item.Denpyodt)</td>
-                <td>@(DateTime.TryParse(item.Uketukedt, out var d2) ? d2.ToString("yyyy/MM/dd") : item.Uketukedt)</td>
-                <td>@item.Suitokb</td>
-                <td>@item.Biko</td>
-                <td class="text-right">@item.Kingaku?.ToString("N0")</td>
-              </tr>
-          }
-      }
-      else
-      {
-          <tr><td colspan="8" class="text-center">データがありません</td></tr>
-      }
-      </tbody>
-    </table>
-
-    <div class="table-footer">
-      <div class="total-info">
-        交通費計: @Model.Results.Sum(x => x.Kingaku ?? 0).ToString("N0")
-      </div>
-    </div>
-  </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.row-link').forEach(function (tr) {
-    tr.addEventListener('dblclick', function () {
-      const id = tr.getAttribute('data-id');
-      if (id) window.location.href = '@Url.Page("Edit")' + '?id=' + encodeURIComponent(id);
-    });
-  });
-});
-</script>
+@if (TempData["Msg"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Msg"]
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+}
 
 <style>
-  .container-fluid { padding: 20px; }
-  .search-form { margin-bottom: 20px; }
-  .search-container { border: 2px solid #333; padding: 20px; background-color: #f9f9f9; }
-  .search-title { text-align: center; margin-bottom: 20px; font-weight: bold; }
-  .search-fields { display: grid; gap: 15px; margin-bottom: 20px; }
-  .field-row { display: flex; align-items: center; gap: 10px; }
-  .field-label { width: 120px; font-weight: bold; text-align: right; }
-  .field-input { display: flex; align-items: center; gap: 8px; }
-  .year-select, .range-from, .range-to, .date-input { padding: 5px; border: 1px solid #ccc; }
-  .range-from, .range-to { width: 140px; }
-  .date-input { width: 160px; }
-  .checkbox-group { display: flex; gap: 20px; }
-  .search-button-container { text-align: left; display:flex; gap:10px; justify-content:right; }
-  .btn { padding: 8px 22px; border: none; border-radius: 4px; cursor: pointer; }
-  .btn-primary { background: #007bff; color:#fff; }
-  .btn-secondary { background: #6c757d; color:#fff; }
-  .btn-primary:hover { background:#0056b3; }
-  .table-container { margin-top: 20px; }
-  .data-table { width: 100%; border-collapse: collapse; border: 1px solid #333; }
-  .data-table th, .data-table td { border: 1px solid #333; padding: 8px; text-align: left; }
-  .data-table th { background-color: #f0f0f0; text-align:center; }
-  .text-center { text-align: center; }
-  .text-right { text-align: right; }
-  .table-footer { margin-top: 10px; text-align: right; }
-  .total-info { font-weight: bold; font-size: 16px; }
-  .col-gyou { width: 60px; } .col-denpyono { width: 110px; } .col-bumon { width: 180px; }
-  .col-denpyodt, .col-shinsei, .col-shutsuno { width: 120px; }
-  .col-mokuteki { width: 240px; } .col-kingaku { width: 140px; }
+    .container-fluid {
+        padding: 20px;
+    }
+
+    .search-form {
+        margin-bottom: 20px;
+    }
+
+    .search-container {
+        border: 2px solid #333;
+        padding: 20px;
+        background-color: #f9f9f9;
+    }
+
+    .search-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+    .search-fields {
+        display: grid;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .field-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .field-label {
+        width: 120px;
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .field-input {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .year-select {
+        padding: 5px;
+        border: 1px solid #ccc;
+        width: 150px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .range-from, .range-to {
+        padding: 5px;
+        border: 1px solid #ccc;
+        width: 120px;
+    }
+
+    .date-input {
+        width: 140px;
+    }
+
+    .range-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .range-separator {
+        font-weight: bold;
+    }
+
+    .checkbox-group {
+        display: flex;
+        gap: 20px;
+    }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
+
+    .search-button-container {
+        text-align: center;
+        margin-right: 30px;
+    }
+
+    .btn {
+        padding: 10px 30px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 0 5px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+    .table-container {
+        margin-top: 20px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #333;
+    }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .table-footer {
+        margin-top: 10px;
+        text-align: right;
+    }
+
+    .total-info {
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .col-gyou {
+        width: 50px;
+    }
+
+    .col-denpyono {
+        width: 100px;
+    }
+
+    .col-bumon {
+        width: 150px;
+    }
+
+    .col-denpyodt {
+        width: 100px;
+    }
+
+    .col-shinsei {
+        width: 100px;
+    }
+
+    .col-shutsuno {
+        width: 100px;
+    }
+
+    .col-mokuteki {
+        width: 200px;
+    }
+
+    .col-kingaku {
+        width: 120px;
+    }
+
+    .alert {
+        margin: 20px;
+        padding: 15px;
+        border-radius: 4px;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    .close {
+        float: right;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+        color: #000;
+        text-shadow: 0 1px 0 #fff;
+        opacity: .5;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+    }
 </style>
-```
+
+<script>
+    // Function để edit - double click vào row
+    function editItem(denpyono) {
+        window.location.href = '/Schedule/AddSchedule?denpyono=' + denpyono;
+    }
+
+    // Function để create new - click button 登録
+    function createNew() {
+        window.location.href = '/Schedule/AddSchedule';
+    }
+
+    // Auto close alert after 3 seconds
+    setTimeout(function() {
+        var alert = document.querySelector('.alert');
+        if (alert) {
+            alert.style.display = 'none';
+        }
+    }, 3000);
+</script>

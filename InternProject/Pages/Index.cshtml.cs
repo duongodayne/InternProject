@@ -3,60 +3,103 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace InternProject.Pages.YDenpyo;
-
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _context;
     public IndexModel(AppDbContext context) => _context = context;
 
-    // ===== Filters =====
-    [BindProperty(SupportsGet = true)] public int? Nendo { get; set; }
-    [BindProperty(SupportsGet = true)] public long? DenpyonoFrom { get; set; }
-    [BindProperty(SupportsGet = true)] public long? DenpyonoTo { get; set; }
-    [BindProperty(SupportsGet = true)] public DateTime? DenpyodtFrom { get; set; }
-    [BindProperty(SupportsGet = true)] public DateTime? DenpyodtTo { get; set; }
-    [BindProperty(SupportsGet = true)] public DateTime? ShinseibFrom { get; set; }
-    [BindProperty(SupportsGet = true)] public DateTime? ShinseibTo { get; set; }
-    [BindProperty(SupportsGet = true)] public List<string> ShutsunoHoho { get; set; } = new();
+    [BindProperty(SupportsGet = true)]
+    public int? Nendo { get; set; } // 年度
 
-    // ===== View data =====
-    public List<int> AvailableYears { get; set; } = new();
+    [BindProperty(SupportsGet = true)]
+    public string? DenpyonoFrom { get; set; } // 伝票番号 từ
+
+    [BindProperty(SupportsGet = true)]
+    public string? DenpyonoTo { get; set; } // 伝票番号 đến
+
+    [BindProperty(SupportsGet = true)]
+    public string? DenpyodtFrom { get; set; } // 伝票日付 từ
+
+    [BindProperty(SupportsGet = true)]
+    public string? DenpyodtTo { get; set; } // 伝票日付 đến
+
+    [BindProperty(SupportsGet = true)]
+    public string? ShinseibFrom { get; set; } // 申請日 từ
+
+    [BindProperty(SupportsGet = true)]
+    public string? ShinseibTo { get; set; } // 申請日 đến
+
+    [BindProperty(SupportsGet = true)]
+    public List<string> ShutsunoHoho { get; set; } = new(); // 出納方法 (checkbox)
+
     public List<EsYdenpyo> Results { get; set; } = new();
+
+    // Danh sách năm cho dropdown
+    public List<int> AvailableYears { get; set; } = new();
 
     public void OnGet()
     {
-        // 年度: 10 năm gần nhất (hiển thị từ hiện tại đổ về trước)
-        var thisYear = DateTime.Today.Year;
-        AvailableYears = Enumerable.Range(thisYear - 9, 10).Reverse().ToList();
+        // Tạo danh sách năm (từ 2020 đến năm hiện tại + 2)
+        var currentYear = DateTime.Now.Year;
+        AvailableYears = Enumerable.Range(2020, currentYear - 2020 + 3).ToList();
 
-        var q = _context.EsYdenpyos
+        var query = _context.EsYdenpyos
             .Include(x => x.BumoncdYkanrNavigation)
+            .Include(x => x.EsYdenpyods)
             .AsQueryable();
 
         // 年度
         if (Nendo.HasValue)
-            q = q.Where(x => x.Kaikeind == Nendo.Value);
+            query = query.Where(x => x.Kaikeind == Nendo.Value);
 
-        // 伝票番号 From-To
-        if (DenpyonoFrom.HasValue) q = q.Where(x => x.Denpyono >= DenpyonoFrom.Value);
-        if (DenpyonoTo.HasValue) q = q.Where(x => x.Denpyono <= DenpyonoTo.Value);
+        if (!string.IsNullOrEmpty(DenpyonoFrom) && decimal.TryParse(DenpyonoFrom, out decimal denpyonoFromValue))
+            query = query.Where(x => x.Denpyono >= denpyonoFromValue);
 
-        // 伝票日付 From-To  (DB đang lưu chuỗi -> so sánh cùng format)
-        if (DenpyodtFrom.HasValue) q = q.Where(x => string.Compare(x.Denpyodt, ToDbDate(DenpyodtFrom.Value)) >= 0);
-        if (DenpyodtTo.HasValue) q = q.Where(x => string.Compare(x.Denpyodt, ToDbDate(DenpyodtTo.Value)) <= 0);
+        if (!string.IsNullOrEmpty(DenpyonoTo) && decimal.TryParse(DenpyonoTo, out decimal denpyonoToValue))
+            query = query.Where(x => x.Denpyono <= denpyonoToValue);
 
-        // 申請日 From-To
-        if (ShinseibFrom.HasValue) q = q.Where(x => string.Compare(x.Uketukedt, ToDbDate(ShinseibFrom.Value)) >= 0);
-        if (ShinseibTo.HasValue) q = q.Where(x => string.Compare(x.Uketukedt, ToDbDate(ShinseibTo.Value)) <= 0);
+        if (!string.IsNullOrEmpty(DenpyodtFrom))
+        {
+            // Nếu input là yyyy/MM/dd, chuyển sang yyyy-MM-dd để so sánh với DB
+            string fromDate = DenpyodtFrom.Contains("/")
+                ? DenpyodtFrom.Replace("/", "-")  // yyyy/MM/dd -> yyyy-MM-dd
+                : DenpyodtFrom;                    // Giữ nguyên nếu đã là yyyy-MM-dd
 
-        // 出納方法 (checkbox multi-select)
-        if (ShutsunoHoho?.Any() == true)
-            q = q.Where(x => ShutsunoHoho.Contains(x.Suitokb));
+            query = query.Where(x => string.Compare(x.Denpyodt, fromDate) >= 0);
+        }
 
-        Results = q.OrderByDescending(x => x.Denpyono).ToList();
+        if (!string.IsNullOrEmpty(DenpyodtTo))
+        {
+            string toDate = DenpyodtTo.Contains("/")
+                ? DenpyodtTo.Replace("/", "-")
+                : DenpyodtTo;
+
+            query = query.Where(x => string.Compare(x.Denpyodt, toDate) <= 0);
+        }
+
+        if (!string.IsNullOrEmpty(ShinseibFrom))
+        {
+            string fromDate = ShinseibFrom.Contains("/")
+                ? ShinseibFrom.Replace("/", "-")
+                : ShinseibFrom;
+
+            query = query.Where(x => string.Compare(x.Uketukedt, fromDate) >= 0);
+        }
+
+        if (!string.IsNullOrEmpty(ShinseibTo))
+        {
+            string toDate = ShinseibTo.Contains("/")
+                ? ShinseibTo.Replace("/", "-")
+                : ShinseibTo;
+
+            query = query.Where(x => string.Compare(x.Uketukedt, toDate) <= 0);
+        }
+
+        if (ShutsunoHoho != null && ShutsunoHoho.Any())
+            query = query.Where(x => ShutsunoHoho.Contains(x.Suitokb));
+
+        Results = query.OrderBy(x => x.Denpyono).ToList();
     }
 
-    // NOTE: Chọn 1 format lưu trong DB và dùng nhất quán. Ở đây giả định DB lưu "yyyy-MM-dd".
-    private static string ToDbDate(DateTime dt) => dt.ToString("yyyy-MM-dd");
+
 }
