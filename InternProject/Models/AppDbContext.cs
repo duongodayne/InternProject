@@ -21,9 +21,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<EsYdenpyod> EsYdenpyods { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseOracle("Name=ConnectionStrings:DefaultConnection");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -189,6 +186,7 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.DenpyonoNavigation).WithMany(p => p.EsYdenpyods)
                 .HasForeignKey(d => d.Denpyono)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_ES_YDENPYOD");
         });
 

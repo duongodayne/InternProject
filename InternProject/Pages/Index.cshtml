@@ -18,7 +18,8 @@
                             <option value="">年度</option>
                             @foreach (var y in Model.AvailableYears)
                             {
-                                <option value="@y" selected="@(Model.Nendo == y ? "selected" : null)">@y 年度</option>
+                                var selected = Model.Nendo == y ? "selected" : "";
+                                <option value="@y" selected="@selected">@y 年度</option>
                             }
                         </select>
                     </div>
@@ -53,11 +54,17 @@
 
                 <div class="field-row">
                     <label class="field-label">出納方法</label>
-                    <div class="field-input checkbox-group">
-                        <label><input type="checkbox" name="ShutsunoHoho" value="現金" @(Model.ShutsunoHoho.Contains("現金") ? "checked" : "") /> 現金</label>
-                        <label><input type="checkbox" name="ShutsunoHoho" value="振込" @(Model.ShutsunoHoho.Contains("振込") ? "checked" : "") /> 振込</label>
-                        <label><input type="checkbox" name="ShutsunoHoho" value="カード" @(Model.ShutsunoHoho.Contains("カード") ? "checked" : "") /> カード</label>
-                        <label><input type="checkbox" name="ShutsunoHoho" value="その他" @(Model.ShutsunoHoho.Contains("その他") ? "checked" : "") /> その他</label>
+                    <div class="field-input">
+                        <select name="ShutsunoHoho" class="year-select">
+                            <option value="">出納方法</option>
+                            @{
+                                string sh = Model.ShutsunoHoho ?? "";
+                            }
+                            <option value="現金" selected="@(sh == "現金")">現金</option>
+                            <option value="振込" selected="@(sh == "振込")">振込</option>
+                            <option value="カード" selected="@(sh == "カード")">カード</option>
+                            <option value="その他" selected="@(sh == "その他")">その他</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -110,7 +117,7 @@
 
         <div class="table-footer">
             <div class="total-info">
-                交通費計: @((Model.Results?.Sum(x => x.Kingaku ?? 0) ?? 0).ToString("N0"))
+                合計金額: @((Model.Results?.Sum(x => x.Kingaku ?? 0) ?? 0).ToString("N0"))
             </div>
         </div>
     </div>
@@ -125,243 +132,52 @@
 }
 
 <style>
-    .container-fluid {
-        padding: 20px;
-    }
-
-    .search-form {
-        margin-bottom: 20px;
-    }
-
-    .search-container {
-        border: 2px solid #333;
-        padding: 20px;
-        background-color: #f9f9f9;
-    }
-
-    .search-title {
-        text-align: center;
-        margin-bottom: 20px;
-        font-weight: bold;
-    }
-
-    .search-fields {
-        display: grid;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .field-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .field-label {
-        width: 120px;
-        font-weight: bold;
-        text-align: right;
-    }
-
-    .field-input {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .year-select {
-        padding: 5px;
-        border: 1px solid #ccc;
-        width: 150px;
-        font-size: 14px;
-        background-color: white;
-    }
-
-    .range-from, .range-to {
-        padding: 5px;
-        border: 1px solid #ccc;
-        width: 120px;
-    }
-
-    .date-input {
-        width: 140px;
-    }
-
-    .range-input {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .range-separator {
-        font-weight: bold;
-    }
-
-    .checkbox-group {
-        display: flex;
-        gap: 20px;
-    }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: normal;
-        }
-
-    .search-button-container {
-        text-align: center;
-        margin-right: 30px;
-    }
-
-    .btn {
-        padding: 10px 30px;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-        border-radius: 4px;
-        text-decoration: none;
-        display: inline-block;
-        margin: 0 5px;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-
-    .table-container {
-        margin-top: 20px;
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid #333;
-    }
-
-        .data-table th,
-        .data-table td {
-            border: 1px solid #333;
-            padding: 8px;
-            text-align: left;
-        }
-
-        .data-table th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .data-table tbody tr:hover {
-            background-color: #f5f5f5;
-        }
-
-    .text-center {
-        text-align: center;
-    }
-
-    .text-right {
-        text-align: right;
-    }
-
-    .table-footer {
-        margin-top: 10px;
-        text-align: right;
-    }
-
-    .total-info {
-        font-weight: bold;
-        font-size: 16px;
-    }
-
-    .col-gyou {
-        width: 50px;
-    }
-
-    .col-denpyono {
-        width: 100px;
-    }
-
-    .col-bumon {
-        width: 150px;
-    }
-
-    .col-denpyodt {
-        width: 100px;
-    }
-
-    .col-shinsei {
-        width: 100px;
-    }
-
-    .col-shutsuno {
-        width: 100px;
-    }
-
-    .col-mokuteki {
-        width: 200px;
-    }
-
-    .col-kingaku {
-        width: 120px;
-    }
-
-    .alert {
-        margin: 20px;
-        padding: 15px;
-        border-radius: 4px;
-    }
-
-    .alert-success {
-        background-color: #d4edda;
-        border-color: #c3e6cb;
-        color: #155724;
-    }
-
-    .close {
-        float: right;
-        font-size: 1.5rem;
-        font-weight: 700;
-        line-height: 1;
-        color: #000;
-        text-shadow: 0 1px 0 #fff;
-        opacity: .5;
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-    }
+    .container-fluid { padding: 20px; }
+    .search-form { margin-bottom: 20px; }
+    .search-container { border: 2px solid #333; padding: 20px; background-color: #f9f9f9; }
+    .search-title { text-align: center; margin-bottom: 20px; font-weight: bold; }
+    .search-fields { display: grid; gap: 15px; margin-bottom: 20px; }
+    .field-row { display: flex; align-items: center; gap: 10px; }
+    .field-label { width: 120px; font-weight: bold; text-align: right; }
+    .field-input { display: flex; align-items: center; gap: 5px; }
+    .year-select { padding: 5px; border: 1px solid #ccc; width: 150px; font-size: 14px; background-color: white; }
+    .range-from, .range-to { padding: 5px; border: 1px solid #ccc; width: 120px; }
+    .date-input { width: 140px; }
+    .range-input { display: flex; align-items: center; gap: 10px; }
+    .range-separator { font-weight: bold; }
+    .checkbox-group { display: flex; gap: 20px; }
+    .search-button-container { text-align: center; margin-right: 30px; }
+    .btn { padding: 10px 30px; border: none; cursor: pointer; font-size: 16px; border-radius: 4px; text-decoration: none; display: inline-block; margin: 0 5px; }
+    .btn-primary { background-color: #007bff; color: white; }
+    .btn-primary:hover { background-color: #0056b3; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-secondary:hover { background-color: #545b62; }
+    .table-container { margin-top: 20px; }
+    .data-table { width: 100%; border-collapse: collapse; border: 1px solid #333; }
+    .data-table th, .data-table td { border: 1px solid #333; padding: 8px; text-align: left; }
+    .data-table th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+    .data-table tbody tr:hover { background-color: #f5f5f5; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .table-footer { margin-top: 10px; text-align: right; }
+    .total-info { font-weight: bold; font-size: 16px; }
+    .col-gyou { width: 50px; } .col-denpyono { width: 100px; } .col-bumon { width: 150px; }
+    .col-denpyodt { width: 100px; } .col-shinsei { width: 100px; } .col-shutsuno { width: 100px; }
+    .col-mokuteki { width: 200px; } .col-kingaku { width: 120px; }
+    .alert { margin: 20px; padding: 15px; border-radius: 4px; }
+    .alert-success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+    .close { float: right; font-size: 1.5rem; font-weight: 700; line-height: 1; color: #000; text-shadow: 0 1px 0 #fff; opacity: .5; background: transparent; border: 0; cursor: pointer; }
 </style>
 
 <script>
-    // Function để edit - double click vào row
     function editItem(denpyono) {
         window.location.href = '/Schedule/AddSchedule?denpyono=' + denpyono;
     }
-
-    // Function để create new - click button 登録
     function createNew() {
         window.location.href = '/Schedule/AddSchedule';
     }
-
-    // Auto close alert after 3 seconds
     setTimeout(function() {
         var alert = document.querySelector('.alert');
-        if (alert) {
-            alert.style.display = 'none';
-        }
+        if (alert) alert.style.display = 'none';
     }, 3000);
 </script>

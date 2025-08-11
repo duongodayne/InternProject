@@ -30,18 +30,19 @@
                                style="background-color: #e9ecef;" />
                     </div>
 
-                    <!-- Buttons -->
                     <div class="button-container">
                         <button type="submit" asp-page-handler="Register" class="btn btn-primary">登録</button>
+
+                        @* ẨN HOÀN TOÀN nút xóa khi ở chế độ tạo mới *@
                         @if (!Model.IsNew)
                         {
                             <button type="button" class="btn btn-danger" onclick="confirmDelete()">削除</button>
                         }
+
                         <button type="button" class="btn btn-secondary" onclick="window.location.href='/Index'">終了</button>
                     </div>
                 </div>
 
-                <!-- Hidden form for delete confirmation -->
                 <input type="hidden" asp-for="ConfirmDelete" id="confirmDeleteInput" />
             </div>
 
@@ -92,7 +93,7 @@
                 </div>
             </div>
 
-            <!-- Row 5: 起票部門 (2 ô: code và name) -->
+            <!-- Row 5: 起票部門 -->
             <div class="form-row">
                 <label class="form-label">起票部門</label>
                 <div class="form-input" style="display: flex; gap: 10px;">
@@ -119,22 +120,11 @@
                     <textarea asp-for="Biko" class="form-control" rows="3" required></textarea>
                 </div>
             </div>
-
-            @*   <!-- Row 7: 金額 -->
-                <div class="form-row">
-                    <label class="form-label">金額</label>
-                    <div class="form-input">
-                        <input asp-for="Kingaku" type="number" class="form-control" step="1" />
-                    </div>
-                </div> *@
         </div>
-
-
     </form>
 </div>
 
 <style>
-    /* ====== Base spacing & tokens ====== */
     :root {
         --gap-x: 16px;
         --gap-y: 12px;
@@ -155,7 +145,6 @@
         --danger-hover: #c82333;
     }
 
-    /* ====== Layout containers ====== */
     .container-fluid {
         padding: 20px;
         color: var(--text);
@@ -175,10 +164,6 @@
         font-size: 20px;
     }
 
-    .form-content {
-    }
-
-    /* ====== Rows, labels, inputs ====== */
     .form-row {
         display: flex;
         align-items: center;
@@ -203,7 +188,7 @@
 
         .form-input.full-width {
             flex: 1 1 auto;
-            max-width: 500px; /* Giữ theo file cũ. Có thể tăng lên nếu cần */
+            max-width: 500px;
         }
 
     .form-control {
@@ -228,16 +213,14 @@
             color: #495057;
         }
 
-    /* Date input default width */
     .date-input {
         width: 150px;
     }
 
-    /* ====== Row 2: compact line (伝票日付 / 出納方法 / 支払予定日) ====== */
     .form-row.row-compact {
         column-gap: 16px;
         row-gap: 8px;
-        flex-wrap: nowrap; /* giữ cùng 1 hàng khi đủ rộng */
+        flex-wrap: nowrap;
     }
 
         .form-row.row-compact .form-label {
@@ -259,9 +242,8 @@
             width: var(--input-w-compact) !important;
         }
 
-    /* ====== Buttons ====== */
     .button-container {
-        margin-left: auto; /* đẩy group nút sang phải trong cùng .form-row */
+        margin-left: auto;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -303,7 +285,6 @@
             background-color: var(--danger-hover);
         }
 
-    /* ====== Alerts ====== */
     .alert {
         padding: 10px;
         margin-bottom: 15px;
@@ -316,64 +297,52 @@
         color: #856404;
     }
 
-    /* ====== Special widths for 部門 inputs (khớp id trong markup) ====== */
     #bumonCode {
         width: 100px;
     }
 
     #bumonName {
         width: 200px;
-        background-color: var(--muted);
+        background-color: #e9ecef;
     }
-
 </style>
 
 <script>
-    // Function xác nhận xóa
     function confirmDelete() {
-        if (confirm('削除してもよろしいですか？')) {
+        const no = document.querySelector('input[name="Denpyono"]').value || '';
+        if (confirm('Bạn có chắc chắn muốn xóa dữ liệu này?\n伝票番号: ' + no)) {
             document.getElementById('confirmDeleteInput').value = 'true';
             var form = document.querySelector('form');
             var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'handler';
+            input.type = 'hidden'; 
+            input.name = 'handler'; 
             input.value = 'Delete';
             form.appendChild(input);
             form.submit();
         }
     }
 
-    // Format date input
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const dateInputs = document.querySelectorAll('.date-input');
-
         dateInputs.forEach(input => {
-            input.addEventListener('blur', function() {
+            input.addEventListener('blur', function () {
                 let value = this.value.replace(/[^\d]/g, '');
                 if (value.length === 8) {
-                    this.value = value.substring(0,4) + '/' + value.substring(4,6) + '/' + value.substring(6,8);
+                    this.value = value.substring(0, 4) + '/' + value.substring(4, 6) + '/' + value.substring(6, 8);
                 }
             });
         });
 
-        // Auto load tên bộ phận khi nhập mã
         const bumonCodeInput = document.getElementById('bumonCode');
         const bumonNameInput = document.getElementById('bumonName');
-
         if (bumonCodeInput) {
-            bumonCodeInput.addEventListener('blur', function() {
+            bumonCodeInput.addEventListener('blur', function () {
                 const code = this.value;
                 if (code) {
-                    // Gọi AJAX để lấy tên bộ phận
                     fetch(`/Schedule/AddSchedule?handler=BumonName&bumoncd=${code}`)
                         .then(response => response.json())
-                        .then(data => {
-                            bumonNameInput.value = data.name || '';
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            bumonNameInput.value = '';
-                        });
+                        .then(data => { bumonNameInput.value = data.name || ''; })
+                        .catch(_ => { bumonNameInput.value = ''; });
                 } else {
                     bumonNameInput.value = '';
                 }

@@ -52,17 +52,17 @@ CREATE TABLE BUMON(
 )
 
 --Insert data
-INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('HR', '人事部');
-INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('ACC', '経理部');
-INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('IT', '情報システム部');
-INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('MKT', 'マーケティング部');
-INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('SAL', '営業部');
+INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('001', '人事部');
+INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('002', '経理部');
+INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('003', '情報システム部');
+INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('004', 'マーケティング部');
+INSERT INTO BUMON (BUMONCD, BUMONNM) VALUES ('005', '営業部');
 
-INSERT INTO ES_YDENPYO VALUES (1001, 2024, '2024-07-01', '2024-07-01', 'HR', 'ハノイ出張', '振込', '2024-07-10', 5000000, 'user01', 'pgm01', 'prm01', '2024-07-01', 'user01', 'pgm01', 'prm01', '2024-07-01');
-INSERT INTO ES_YDENPYO VALUES (1002, 2024, '2024-07-02', '2024-07-02', 'ACC', 'セミナー参加', '現金', '2024-07-12', 4200000, 'user02', 'pgm02', 'prm02', '2024-07-02', 'user02', 'pgm02', 'prm02', '2024-07-02');
-INSERT INTO ES_YDENPYO VALUES (1003, 2024, '2024-07-03', '2024-07-03', 'IT', '支店点検', '振込', '2024-07-13', 3800000, 'user03', 'pgm03', 'prm03', '2024-07-03', 'user03', 'pgm03', 'prm03', '2024-07-03');
-INSERT INTO ES_YDENPYO VALUES (1004, 2024, '2024-07-04', '2024-07-04', 'MKT', '取引先訪問', '現金', '2024-07-14', 6000000, 'user04', 'pgm04', 'prm04', '2024-07-04', 'user04', 'pgm04', 'prm04', '2024-07-04');
-INSERT INTO ES_YDENPYO VALUES (1005, 2024, '2024-07-05', '2024-07-05', 'SAL', '市場調査', '振込', '2024-07-15', 4500000, 'user05', 'pgm05', 'prm05', '2024-07-05', 'user05', 'pgm05', 'prm05', '2024-07-05');
+INSERT INTO ES_YDENPYO VALUES (1001, 2024, '2024-07-01', '2024-07-01', '001', 'ハノイ出張', '振込', '2024-07-10', 5000000, 'user01', 'pgm01', 'prm01', '2024-07-01', 'user01', 'pgm01', 'prm01', '2024-07-01');
+INSERT INTO ES_YDENPYO VALUES (1002, 2024, '2024-07-02', '2024-07-02', '002', 'セミナー参加', '現金', '2024-07-12', 4200000, 'user02', 'pgm02', 'prm02', '2024-07-02', 'user02', 'pgm02', 'prm02', '2024-07-02');
+INSERT INTO ES_YDENPYO VALUES (1003, 2024, '2024-07-03', '2024-07-03', '003', '支店点検', '振込', '2024-07-13', 3800000, 'user03', 'pgm03', 'prm03', '2024-07-03', 'user03', 'pgm03', 'prm03', '2024-07-03');
+INSERT INTO ES_YDENPYO VALUES (1004, 2024, '2024-07-04', '2024-07-04', '004', '取引先訪問', '現金', '2024-07-14', 6000000, 'user04', 'pgm04', 'prm04', '2024-07-04', 'user04', 'pgm04', 'prm04', '2024-07-04');
+INSERT INTO ES_YDENPYO VALUES (1005, 2024, '2024-07-05', '2024-07-05', '005', '市場調査', '振込', '2024-07-15', 4500000, 'user05', 'pgm05', 'prm05', '2024-07-05', 'user05', 'pgm05', 'prm05', '2024-07-05');
 
 INSERT INTO ES_YDENPYOD VALUES (1, 1001, '2024-07-02', 'Ho Chi Minh', 'Hanoi', 'Airplane', 2500000, 'user01', 'pgm01', 'prm01', '2024-07-01', 'user01', 'pgm01', 'prm01', '2024-07-01');
 INSERT INTO ES_YDENPYOD VALUES (2, 1001, '2024-07-03', 'Hanoi', 'Ho Chi Minh', 'Airplane', 2500000, 'user01', 'pgm01', 'prm01', '2024-07-01', 'user01', 'pgm01', 'prm01', '2024-07-01');
@@ -89,10 +89,6 @@ SELECT * FROM es_ydenpyo WHERE es_ydenpyo.bumoncd_ykanr = 'HR';
 SELECT * FROM es_ydenpyo 
 JOIN es_ydenpyod ON es_ydenpyo.DENPYONO = es_ydenpyod.DENPYONO 
 ORDER BY es_ydenpyo.denpyono;
-
-SELECT * FROM es_ydenpyo 
-JOIN es_ydenpyod USING (DENPYONO) 
-ORDER BY DENPYONO;
 
 ALTER TABLE ES_YDENPYOD ADD CONSTRAINT PK_ES_YDENPYOD PRIMARY KEY (DENPYONO, GYONO);
 
